@@ -75,39 +75,50 @@
     }
 
     // === 30 CHARACTERS (10 men + 20 women) ===
+    // Skin tones
+    const SKIN = {
+      light: '#f5d0a9',
+      medium: '#c68642',
+      tan: '#d4a574',
+      bronze: '#a0522d',
+      brown: '#8b6914',
+      dark: '#5c4033',
+      deep: '#3b2417'
+    };
+
     const charData = [
-      // 10 MEN
-      { id: 'clyde', name: 'Clyde', color: '#00aaff', gender: 'M', dialog: '', role: 'CEO' },
-      { id: 'marcus', name: 'Marcus Chen', color: '#4488ff', gender: 'M', dialog: '', role: 'CTO' },
-      { id: 'aiden', name: 'Aiden Brooks', color: '#88ff00', gender: 'M', dialog: '', role: 'Engineer' },
-      { id: 'james', name: 'James Wright', color: '#ffaa00', gender: 'M', dialog: '', role: 'Investor' },
-      { id: 'noah', name: 'Noah Rivera', color: '#ff4488', gender: 'M', dialog: '', role: 'Designer' },
-      { id: 'ethan', name: 'Ethan Park', color: '#aa44ff', gender: 'M', dialog: '', role: 'Marketer' },
-      { id: 'liam', name: 'Liam O\'Brien', color: '#44ffaa', gender: 'M', dialog: '', role: 'Lawyer' },
-      { id: 'david', name: 'David Kim', color: '#ff8844', gender: 'M', dialog: '', role: 'Mentor' },
-      { id: 'alex', name: 'Alex Torres', color: '#00ddff', gender: 'M', dialog: '', role: 'Rival CEO' },
-      { id: 'kai', name: 'Kai Nakamura', color: '#ddff00', gender: 'M', dialog: '', role: 'Freelancer' },
-      // 20 WOMEN
-      { id: 'evelyn', name: 'Evelyn Park', color: '#ff6644', gender: 'F', dialog: '', role: 'Co-Founder' },
-      { id: 'sofia', name: 'Sofia Martinez', color: '#ff44aa', gender: 'F', dialog: '', role: 'CFO' },
-      { id: 'maya', name: 'Maya Johnson', color: '#aa44ff', gender: 'F', dialog: '', role: 'Product Lead' },
-      { id: 'aria', name: 'Aria Williams', color: '#44aaff', gender: 'F', dialog: '', role: 'Data Scientist' },
-      { id: 'zara', name: 'Zara Ahmed', color: '#ff2266', gender: 'F', dialog: '', role: 'HR Director' },
-      { id: 'luna', name: 'Luna Chen', color: '#44ff88', gender: 'F', dialog: '', role: 'UX Researcher' },
-      { id: 'chloe', name: 'Chloe Davis', color: '#ff88cc', gender: 'F', dialog: '', role: 'Sales Lead' },
-      { id: 'nina', name: 'Nina Patel', color: '#8844ff', gender: 'F', dialog: '', role: 'VP Eng' },
-      { id: 'ella', name: 'Ella Thompson', color: '#44ddff', gender: 'F', dialog: '', role: 'Intern' },
-      { id: 'ruby', name: 'Ruby Garcia', color: '#ff6688', gender: 'F', dialog: '', role: 'PR Manager' },
-      { id: 'lily', name: 'Lily Wang', color: '#66ff44', gender: 'F', dialog: '', role: 'QA Lead' },
-      { id: 'grace', name: 'Grace Lee', color: '#ffaa66', gender: 'F', dialog: '', role: 'Architect' },
-      { id: 'ivy', name: 'Ivy Robinson', color: '#aa66ff', gender: 'F', dialog: '', role: 'Accountant' },
-      { id: 'rose', name: 'Rose Kim', color: '#ff4466', gender: 'F', dialog: '', role: 'Content Creator' },
-      { id: 'emma', name: 'Emma Wilson', color: '#44ffcc', gender: 'F', dialog: '', role: 'Influencer' },
-      { id: 'hanna', name: 'Hanna Brooks', color: '#ff8866', gender: 'F', dialog: '', role: 'Analyst' },
-      { id: 'lana', name: 'Lana Foster', color: '#66aaff', gender: 'F', dialog: '', role: 'Strategist' },
-      { id: 'jade', name: 'Jade Nguyen', color: '#ff44cc', gender: 'F', dialog: '', role: 'Therapist' },
-      { id: 'vera', name: 'Vera Schmidt', color: '#44ff66', gender: 'F', dialog: '', role: 'Chef' },
-      { id: 'kira', name: 'Kira Tanaka', color: '#ffcc44', gender: 'F', dialog: '', role: 'Photographer' },
+      // 10 MEN — 2 Black, 2 Jamaican Black, rest mixed
+      { id: 'marcus', name: 'Marcus Johnson', color: '#4488ff', gender: 'M', dialog: '', role: 'CEO', skin: SKIN.deep, build: 'athletic', desc: 'Black American' },
+      { id: 'james', name: 'James Williams', color: '#ffaa00', gender: 'M', dialog: '', role: 'Investor', skin: SKIN.dark, build: 'broad', desc: 'Black American' },
+      { id: 'omar', name: 'Omar Campbell', color: '#00ddff', gender: 'M', dialog: '', role: 'CTO', skin: SKIN.brown, build: 'athletic', desc: 'Jamaican Black' },
+      { id: 'desmond', name: 'Desmond Blake', color: '#ff8844', gender: 'M', dialog: '', role: 'Engineer', skin: SKIN.deep, build: 'lean', desc: 'Jamaican Black' },
+      { id: 'carlos', name: 'Carlos Rivera', color: '#aa44ff', gender: 'M', dialog: '', role: 'Designer', skin: SKIN.tan, build: 'athletic', desc: 'Colombian' },
+      { id: 'miguel', name: 'Miguel Torres', color: '#88ff00', gender: 'M', dialog: '', role: 'Marketer', skin: SKIN.medium, build: 'lean', desc: 'Mexican' },
+      { id: 'jin', name: 'Jin Park', color: '#ff4488', gender: 'M', dialog: '', role: 'Freelancer', skin: SKIN.light, build: 'lean', desc: 'Korean' },
+      { id: 'rafael', name: 'Rafael Santos', color: '#44ffaa', gender: 'M', dialog: '', role: 'Lawyer', skin: SKIN.bronze, build: 'athletic', desc: 'Brazilian' },
+      { id: 'kai', name: 'Kai Nakamura', color: '#ddff00', gender: 'M', dialog: '', role: 'Mentor', skin: SKIN.light, build: 'lean', desc: 'Japanese' },
+      { id: 'tony', name: 'Anthony Brooks', color: '#00ff88', gender: 'M', dialog: '', role: 'Rival CEO', skin: SKIN.medium, build: 'broad', desc: 'Mixed' },
+      // 20 WOMEN — Mostly Hispanic, Caribbean, Colombian, Black
+      { id: 'evelyn', name: 'Evelyn Park', color: '#ff6644', gender: 'F', dialog: '', role: 'Co-Founder', skin: SKIN.light, build: 'fit', desc: 'Korean' },
+      { id: 'sofia', name: 'Sofia Martinez', color: '#ff44aa', gender: 'F', dialog: '', role: 'CFO', skin: SKIN.tan, build: 'fit', desc: 'Colombian' },
+      { id: 'valentina', name: 'Valentina Cruz', color: '#ff2266', gender: 'F', dialog: '', role: 'VP Eng', skin: SKIN.bronze, build: 'athletic', desc: 'Colombian' },
+      { id: 'isabella', name: 'Isabella Rodriguez', color: '#aa44ff', gender: 'F', dialog: '', role: 'Product Lead', skin: SKIN.tan, build: 'fit', desc: 'Colombian' },
+      { id: 'mariana', name: 'Mariana Lopez', color: '#ff88cc', gender: 'F', dialog: '', role: 'Sales Lead', skin: SKIN.medium, build: 'athletic', desc: 'Colombian' },
+      { id: 'camila', name: 'Camila Gutierrez', color: '#ff4466', gender: 'F', dialog: '', role: 'PR Manager', skin: SKIN.bronze, build: 'fit', desc: 'Colombian' },
+      { id: 'rosa', name: 'Rosa Hernandez', color: '#44aaff', gender: 'F', dialog: '', role: 'HR Director', skin: SKIN.tan, build: 'curvy', desc: 'Dominican' },
+      { id: 'nayeli', name: 'Nayeli Fernandez', color: '#44ddff', gender: 'F', dialog: '', role: 'Strategist', skin: SKIN.medium, build: 'fit', desc: 'Puerto Rican' },
+      { id: 'aliyah', name: 'Aliyah Davis', color: '#ff8866', gender: 'F', dialog: '', role: 'Data Scientist', skin: SKIN.dark, build: 'athletic', desc: 'Black American' },
+      { id: 'naomi', name: 'Naomi Clarke', color: '#44ffcc', gender: 'F', dialog: '', role: 'Analyst', skin: SKIN.deep, build: 'fit', desc: 'Jamaican' },
+      { id: 'shanice', name: 'Shanice Brown', color: '#8844ff', gender: 'F', dialog: '', role: 'Content Creator', skin: SKIN.brown, build: 'curvy', desc: 'Jamaican' },
+      { id: 'keisha', name: 'Keisha Campbell', color: '#ff6688', gender: 'F', dialog: '', role: 'Influencer', skin: SKIN.deep, build: 'athletic', desc: 'Jamaican' },
+      { id: 'mia', name: 'Mia Torres', color: '#ffaa66', gender: 'F', dialog: '', role: 'Architect', skin: SKIN.tan, build: 'fit', desc: 'Puerto Rican' },
+      { id: 'leticia', name: 'Leticia Santos', color: '#66ff44', gender: 'F', dialog: '', role: 'UX Researcher', skin: SKIN.bronze, build: 'fit', desc: 'Brazilian' },
+      { id: 'luna', name: 'Luna Sanchez', color: '#ff44cc', gender: 'F', dialog: '', role: 'Accountant', skin: SKIN.medium, build: 'athletic', desc: 'Mexican' },
+      { id: 'aria', name: 'Aria Chen', color: '#ddff00', gender: 'F', dialog: '', role: 'QA Lead', skin: SKIN.light, build: 'lean', desc: 'Chinese' },
+      { id: 'hana', name: 'Hana Tanaka', color: '#66aaff', gender: 'F', dialog: '', role: 'Therapist', skin: SKIN.light, build: 'fit', desc: 'Japanese' },
+      { id: 'grace', name: 'Grace Kim', color: '#44ff88', gender: 'F', dialog: '', role: 'Chef', skin: SKIN.light, build: 'fit', desc: 'Korean' },
+      { id: 'jasmine', name: 'Jasmine Okafor', color: '#ff8844', gender: 'F', dialog: '', role: 'Photographer', skin: SKIN.dark, build: 'athletic', desc: 'Nigerian' },
+      { id: 'emma', name: 'Emma Wilson', color: '#aa66ff', gender: 'F', dialog: '', role: 'Intern', skin: SKIN.light, build: 'fit', desc: 'American' },
     ];
 
     // Place characters in a scene layout
@@ -151,29 +162,56 @@
       if (!bodyBot || !bodyTop) return;
       const bw = 22 * bodyBot.scale;
       const bh = bodyTop.y - bodyBot.y;
-      ctx.fillStyle = c.color;
-      ctx.globalAlpha = 0.85;
+      // Body color (use accent + skin tones)
+      const bodyColor = c.color;
+      ctx.globalAlpha = 0.9;
 
-      // Different body shapes
+      // Different body shapes by build
       if (c.gender === 'F') {
+        const waist = c.build === 'curvy' ? bw * 0.5 : bw * 0.65;
+        const hip = c.build === 'curvy' ? bw * 0.75 : bw * 0.7;
+        // Torso with curves
+        ctx.fillStyle = bodyColor;
         ctx.beginPath();
-        ctx.ellipse(bodyBot.x, (bodyBot.y + bodyTop.y)/2, bw/2, bh/2, 0, 0, Math.PI*2);
+        ctx.moveTo(bodyBot.x - bw/2, bodyBot.y);
+        ctx.quadraticCurveTo(bodyBot.x - hip, (bodyBot.y + bodyTop.y)/2 + bh*0.2, bodyBot.x - waist, bodyTop.y + bh*0.3);
+        ctx.quadraticCurveTo(bodyBot.x - waist*0.9, bodyTop.y + bh*0.05, bodyBot.x - bw*0.35, bodyTop.y);
+        ctx.lineTo(bodyBot.x + bw*0.35, bodyTop.y);
+        ctx.quadraticCurveTo(bodyBot.x + waist*0.9, bodyTop.y + bh*0.05, bodyBot.x + waist, bodyTop.y + bh*0.3);
+        ctx.quadraticCurveTo(bodyBot.x + hip, (bodyBot.y + bodyTop.y)/2 + bh*0.2, bodyBot.x + bw/2, bodyBot.y);
+        ctx.closePath();
         ctx.fill();
       } else {
+        const w = c.build === 'broad' ? bw * 1.2 : (c.build === 'athletic' ? bw * 1.0 : bw * 0.85);
+        ctx.fillStyle = bodyColor;
         ctx.beginPath();
-        ctx.roundRect(bodyBot.x - bw/2, bodyTop.y, bw, bh, 6);
+        ctx.moveTo(bodyBot.x - w/2, bodyBot.y);
+        ctx.lineTo(bodyBot.x - w/2 * 0.7, bodyTop.y);
+        ctx.lineTo(bodyBot.x + w/2 * 0.7, bodyTop.y);
+        ctx.lineTo(bodyBot.x + w/2, bodyBot.y);
+        ctx.closePath();
         ctx.fill();
+        // Shoulders
+        if (c.build !== 'lean') {
+          ctx.beginPath();
+          ctx.moveTo(bodyBot.x - w/2 * 0.7, bodyTop.y);
+          ctx.lineTo(bodyBot.x - w/2, bodyTop.y - bh*0.1);
+          ctx.lineTo(bodyBot.x + w/2, bodyTop.y - bh*0.1);
+          ctx.lineTo(bodyBot.x + w/2 * 0.7, bodyTop.y);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
       ctx.globalAlpha = 1;
 
-      // Head
+      // Head (skin tone)
       const hp = project(c.x, headY, c.z);
       if (!hp) return;
       const r = 11 * hp.scale;
 
       ctx.beginPath();
       ctx.arc(hp.x, hp.y, r, 0, Math.PI*2);
-      ctx.fillStyle = c.color;
+      ctx.fillStyle = c.skin || '#d4a574';
       ctx.fill();
 
       // Eyes
@@ -185,22 +223,34 @@
       ctx.beginPath(); ctx.arc(hp.x - r*0.26, hp.y - r*0.1, er*0.5, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(hp.x + r*0.26, hp.y - r*0.1, er*0.5, 0, Math.PI*2); ctx.fill();
 
-      // Hair (different styles)
-      ctx.fillStyle = shadeColor(c.color, -60);
+      // Hair colors by character (diverse)
+      const hairColors = ['#1a0a00', '#2d1810', '#4a2a10', '#0d0d0d', '#3a2215', '#1c1c1c', '#5c3a20', '#0a0a0a', '#2a1a0a', '#000000'];
+      const hc = hairColors[c.id.charCodeAt(0) % hairColors.length];
+      ctx.fillStyle = hc;
       if (c.gender === 'F') {
+        // Long flowing hair
         ctx.beginPath();
-        ctx.arc(hp.x, hp.y - r*0.1, r*1.1, Math.PI, Math.PI*2);
+        ctx.arc(hp.x, hp.y - r*0.1, r*1.15, Math.PI*0.85, Math.PI*2.15);
         ctx.fill();
-        // Side hair
+        // Side hair flowing down
         ctx.beginPath();
-        ctx.ellipse(hp.x - r*0.8, hp.y + r*0.3, r*0.3, r*0.6, 0.3, 0, Math.PI*2);
+        ctx.ellipse(hp.x - r*0.9, hp.y + r*0.4, r*0.25, r*0.7, 0.2, 0, Math.PI*2);
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(hp.x + r*0.8, hp.y + r*0.3, r*0.3, r*0.6, -0.3, 0, Math.PI*2);
+        ctx.ellipse(hp.x + r*0.9, hp.y + r*0.4, r*0.25, r*0.7, -0.2, 0, Math.PI*2);
+        ctx.fill();
+        // Hair top volume
+        ctx.beginPath();
+        ctx.arc(hp.x, hp.y - r*0.3, r*0.95, Math.PI*0.7, Math.PI*2.3);
         ctx.fill();
       } else {
+        // Men's hair - varied styles
         ctx.beginPath();
-        ctx.arc(hp.x, hp.y - r*0.15, r*1.05, Math.PI*0.8, Math.PI*2.2);
+        ctx.arc(hp.x, hp.y - r*0.2, r*1.08, Math.PI*0.75, Math.PI*2.25);
+        ctx.fill();
+        // Fade on sides
+        ctx.beginPath();
+        ctx.arc(hp.x, hp.y - r*0.1, r*1.15, Math.PI*1.2, Math.PI*1.8);
         ctx.fill();
       }
 
