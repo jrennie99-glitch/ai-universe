@@ -1,0 +1,15 @@
+{
+  "name": "ai-world-3d",
+  "version": "1.0.0",
+  "description": "AI World 3D - Persistent environments + animated characters for livestream",
+  "scripts": {
+    "start": "node server.js",
+    "capture": "node capture.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "canvas": "^2.11.2",
+    "fluent-ffmpeg": "^2.1.2"
+  }
+}

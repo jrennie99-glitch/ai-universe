@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI World 3D</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; overflow: hidden; font-family: monospace; }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+    #overlay {
+      position: fixed; top: 10px; left: 10px;
+      color: #0f0; font-size: 12px;
+      pointer-events: none; z-index: 100;
+      text-shadow: 0 0 8px rgba(0,255,136,0.5);
+    }
+    #hud {
+      position: fixed; bottom: 10px; left: 10px; right: 10px;
+      display: flex; gap: 8px; justify-content: center;
+      pointer-events: none; z-index: 100; flex-wrap: wrap;
+    }
+    .card {
+      background: rgba(0,0,0,0.85); border: 1px solid #0f0;
+      padding: 8px 14px; border-radius: 6px; color: #fff;
+      text-align: center; min-width: 100px;
+    }
+    .card .name { font-weight: bold; font-size: 13px; color: #0f0; }
+    .card .dialog { font-size: 11px; margin-top: 3px; color: #ccc; max-width: 200px; word-wrap: break-word; }
+    .card .status { font-size: 9px; color: #666; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="overlay">
+    <div>🔥 AI WORLD 3D</div>
+    <div id="fps">FPS: --</div>
+  </div>
+  <div id="hud"></div>
+
+  <script>
+    // === MINI 3D ENGINE (no dependencies) ===
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    let W, H;
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // === CAMERA ===
+    let camX = 0, camY = 3, camZ = 10;
+    let camTargetX = 0, camTargetY = 1.5, camTargetZ = 0;
+    let camAngleY = 0, camAngleX = -0.2;
+    let camDist = 12;
+
+    // Touch/mouse controls
+    let dragging = false, lastMX = 0, lastMY = 0;
+    canvas.addEventListener('pointerdown', e => { dragging = true; lastMX = e.clientX; lastMY = e.clientY; });
+    canvas.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      camAngleY += (e.clientX - lastMX) * 0.005;
+      camAngleX = Math.max(-0.8, Math.min(0.3, camAngleX + (e.clientY - lastMY) * 0.003));
+      lastMX = e.clientX; lastMY = e.clientY;
+    });
+    canvas.addEventListener('pointerup', () => dragging = false);
+    canvas.addEventListener('wheel', e => { camDist = Math.max(4, Math.min(30, camDist + e.deltaY * 0.01)); });
+
+    // === 3D TOOLS ===
+    function project(x, y, z) {
+      const cx = Math.cos(camAngleY), sx = Math.sin(camAngleY);
+      const cy = Math.cos(camAngleX), sy = Math.sin(camAngleX);
+
+      // Translate relative to target
+      x -= camTargetX; y -= camTargetY; z -= camTargetZ;
+
+      // Rotate around Y
+      let rx = x * cx - z * sx;
+      let rz = x * sx + z * cx;
+      // Rotate around X
+      let ry = y * cy - rz * sy;
+      rz = y * sy + rz * cy;
+
+      // Camera distance
+      rz += camDist;
+      if (rz < 0.1) return null;
+
+      const scale = 400;
+      return {
+        x: W/2 + (rx * scale) / rz,
+        y: H/2 - (ry * scale) / rz,
+        depth: rz,
+        scale: scale / rz
+      };
+    }
+
+    // === CHARACTERS ===
+    const characters = [
+      { id: 'clyde', name: 'Clyde', color: '#00aaff', x: -2, z: 0, dialog: '', status: 'idle', animT: 0, tx: null, tz: null },
+      { id: 'evelyn', name: 'Evelyn Park', color: '#ff6644', x: 2, z: 0, dialog: '', status: 'idle', animT: 0, tx: null, tz: null },
+      { id: 'aiden', name: 'Aiden', color: '#88ff00', x: 0, z: -3, dialog: '', status: 'idle', animT: 0, tx: null, tz: null },
+    ];
+
+    function drawChar(c, t) {
+      const bobY = c.status === 'idle' ? Math.sin(t * 2 + c.animT) * 0.05 : Math.abs(Math.sin(t * 8)) * 0.15;
+
+      // Walk toward target
+      if (c.tx !== null) {
+        const dx = c.tx - c.x, dz = c.tz - c.z;
+        const d = Math.sqrt(dx*dx + dz*dz);
+        if (d > 0.2) {
+          const spd = 2 * 0.016;
+          c.x += (dx/d) * spd;
+          c.z += (dz/d) * spd;
+        } else {
+          c.tx = null; c.tz = null; c.status = 'idle';
+        }
+      }
+
+      const bx = c.x, by = 0 + bobY, bz = c.z;
+      const headY = by + 2.1;
+
+      // Body (capsule-ish)
+      const bodyBot = project(bx, by + 0.3, bz);
+      const bodyTop = project(bx, by + 1.5, bz);
+      if (!bodyBot || !bodyTop) return;
+
+      const bw = 30 * bodyBot.scale;
+      const bh = bodyTop.y - bodyBot.y;
+
+      ctx.fillStyle = c.color;
+      ctx.globalAlpha = 0.9;
+      ctx.beginPath();
+      ctx.roundRect(bodyBot.x - bw/2, bodyTop.y, bw, bh, 8);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Head
+      const hp = project(bx, headY, bz);
+      if (hp) {
+        const r = 15 * hp.scale;
+        ctx.beginPath();
+        ctx.arc(hp.x, hp.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = c.color;
+        ctx.fill();
+
+        // Eyes
+        const eyeR = 3 * hp.scale;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(hp.x - r*0.3, hp.y - r*0.15, eyeR, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(hp.x + r*0.3, hp.y - r*0.15, eyeR, 0, Math.PI*2);
+        ctx.fill();
+
+        // Pupils
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(hp.x - r*0.25, hp.y - r*0.15, eyeR*0.5, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(hp.x + r*0.25, hp.y - r*0.15, eyeR*0.5, 0, Math.PI*2);
+        ctx.fill();
+
+        // Mouth (lip sync)
+        const mouthOpen = c.dialog ? (1 + Math.abs(Math.sin(t * 15)) * 3) : 1;
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.ellipse(hp.x, hp.y + r*0.3, r*0.2, mouthOpen, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // Name label
+        const lbl = project(bx, headY + 0.6, bz);
+        if (lbl) {
+          ctx.font = `bold ${Math.max(10, 12 * lbl.scale)}px monospace`;
+          ctx.fillStyle = c.color;
+          ctx.textAlign = 'center';
+          ctx.fillText(c.name, lbl.x, lbl.y);
+        }
+      }
+    }
+
+    // === ENVIRONMENT ===
+    function drawEnvironment() {
+      // Floor
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(0, H/2, W, H/2);
+
+      // Grid
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = 1;
+      for (let i = -20; i <= 20; i += 2) {
+        const a = project(i, 0, -20);
+        const b = project(i, 0, 20);
+        if (a && b) { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+        const c1 = project(-20, 0, i);
+        const d = project(20, 0, i);
+        if (c1 && d) { ctx.beginPath(); ctx.moveTo(c1.x, c1.y); ctx.lineTo(d.x, d.y); ctx.stroke(); }
+      }
+
+      // Walls
+      drawWall(-10, 0, -5, 20, 5, '#223344'); // back
+      drawWall(-10, 0, 5, 0.2, 5, '#1a2a33'); // left (partial)
+      drawWall(10, 0, 5, 0.2, 5, '#1a2a33');  // right
+
+      // Table
+      drawBox(0, 0.8, 1, 4, 0.1, 2, '#553311');
+
+      // Neon sign on back wall
+      const neonA = project(-3, 4, -5);
+      const neonB = project(3, 4, -5);
+      if (neonA && neonB) {
+        ctx.strokeStyle = '#00ff88';
+        ctx.shadowColor = '#00ff88';
+        ctx.shadowBlur = 20;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(neonA.x, neonA.y);
+        ctx.lineTo(neonB.x, neonB.y);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Neon glow
+        ctx.fillStyle = 'rgba(0, 255, 136, 0.05)';
+        ctx.beginPath();
+        ctx.ellipse((neonA.x+neonB.x)/2, neonA.y, 200, 100, 0, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      // "AI WORLD" text on neon
+      const txtP = project(0, 4.2, -4.9);
+      if (txtP) {
+        ctx.font = `bold ${Math.max(14, 24 * txtP.scale)}px monospace`;
+        ctx.fillStyle = '#00ff88';
+        ctx.shadowColor = '#00ff88';
+        ctx.shadowBlur = 15;
+        ctx.textAlign = 'center';
+        ctx.fillText('AI WORLD', txtP.x, txtP.y);
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function drawWall(x, y, z, w, h, color) {
+      const bl = project(x, y, z);
+      const br = project(x + w, y, z);
+      const tl = project(x, y + h, z);
+      const tr = project(x + w, y + h, z);
+      if (!bl || !br || !tl || !tr) return;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(bl.x, bl.y); ctx.lineTo(br.x, br.y);
+      ctx.lineTo(tr.x, tr.y); ctx.lineTo(tl.x, tl.y);
+      ctx.closePath(); ctx.fill();
+    }
+
+    function drawBox(x, y, z, w, h, d, color) {
+      // Top face
+      const p1 = project(x-w/2, y+h, z-d/2);
+      const p2 = project(x+w/2, y+h, z-d/2);
+      const p3 = project(x+w/2, y+h, z+d/2);
+      const p4 = project(x-w/2, y+h, z+d/2);
+      if (p1 && p2 && p3 && p4) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+        ctx.lineTo(p3.x,p3.y); ctx.lineTo(p4.x,p4.y);
+        ctx.closePath(); ctx.fill();
+      }
+      // Front face
+      const f1 = project(x-w/2, y, z+d/2);
+      const f2 = project(x+w/2, y, z+d/2);
+      const f3 = project(x+w/2, y+h, z+d/2);
+      const f4 = project(x-w/2, y+h, z+d/2);
+      if (f1 && f2 && f3 && f4) {
+        ctx.fillStyle = shadeColor(color, -20);
+        ctx.beginPath();
+        ctx.moveTo(f1.x,f1.y); ctx.lineTo(f2.x,f2.y);
+        ctx.lineTo(f3.x,f3.y); ctx.lineTo(f4.x,f4.y);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
+    function shadeColor(c, pct) {
+      let num = parseInt(c.slice(1), 16);
+      let r = Math.max(0, Math.min(255, (num >> 16) + pct));
+      let g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + pct));
+      let b = Math.max(0, Math.min(255, (num & 0xff) + pct));
+      return `rgb(${r},${g},${b})`;
+    }
+
+    // === HUD ===
+    function updateHUD() {
+      const hud = document.getElementById('hud');
+      hud.innerHTML = characters.map(c => `
+        <div class="card" style="border-color:${c.color}">
+          <div class="name" style="color:${c.color}">${c.name}</div>
+          <div class="dialog">${c.dialog || '...'}</div>
+          <div class="status">${c.status}</div>
+        </div>
+      `).join('');
+    }
+
+    // === SIM EVENTS (timed demo) ===
+    let simTime = 0;
+    function simStep() {
+      if (simTime === 2) {
+        characters[0].dialog = "Hey, anyone seen the new update?";
+        characters[0].tx = 1; characters[0].tz = 2;
+        characters[0].status = 'walking';
+      }
+      if (simTime === 5) {
+        characters[1].dialog = "Yeah, the 3D environments are incredible!";
+        characters[1].tx = -1; characters[1].tz = 2;
+        characters[1].status = 'walking';
+      }
+      if (simTime === 8) {
+        characters[2].dialog = "I'm building something special...";
+      }
+      if (simTime === 12) {
+        characters[0].dialog = "This is the future of livestreaming.";
+      }
+    }
+
+    setInterval(() => { simTime++; simStep(); }, 1000);
+
+    // === API SYNC ===
+    async function syncSim() {
+      try {
+        const res = await fetch('/api/scene');
+        const state = await res.json();
+        if (state.characters && state.characters.length) {
+          state.characters.forEach(sc => {
+            const c = characters.find(ch => ch.id === sc.id);
+            if (c) { if (sc.dialog) c.dialog = sc.dialog; }
+          });
+        }
+      } catch(e) {}
+      setTimeout(syncSim, 1000);
+    }
+    syncSim();
+
+    // === RENDER LOOP ===
+    let frames = 0, fpsT = 0, lastT = performance.now();
+
+    function loop(t) {
+      requestAnimationFrame(loop);
+      const dt = (t - lastT) / 1000;
+      lastT = t;
+
+      // FPS
+      frames++; fpsT += dt;
+      if (fpsT >= 1) {
+        document.getElementById('fps').textContent = `FPS: ${frames}`;
+        frames = 0; fpsT = 0;
+      }
+
+      // Clear
+      ctx.clearRect(0, 0, W, H);
+
+      // Sky gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#0a0a1a');
+      grad.addColorStop(1, '#1a1a2a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Draw world
+      drawEnvironment();
+
+      // Sort characters by depth for painter's algorithm
+      const sorted = characters.map(c => {
+        const p = project(c.x, 1, c.z);
+        return { c, depth: p ? p.depth : 999 };
+      }).sort((a, b) => b.depth - a.depth);
+
+      for (const { c } of sorted) {
+        drawChar(c, t / 1000);
+      }
+
+      // HUD
+      updateHUD();
+    }
+
+    requestAnimationFrame(loop);
+    console.log('🔥 AI World 3D loaded');
+  </script>
+</body>
+</html>
