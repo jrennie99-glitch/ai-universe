@@ -88,16 +88,18 @@
 
     const charData = [
       // 10 MEN — 2 Black, 2 Jamaican Black, rest mixed
-      { id: 'marcus', name: 'Marcus Johnson', color: '#4488ff', gender: 'M', dialog: '', role: 'CEO', skin: SKIN.deep, build: 'athletic', desc: 'Black American' },
-      { id: 'james', name: 'James Williams', color: '#ffaa00', gender: 'M', dialog: '', role: 'Investor', skin: SKIN.dark, build: 'broad', desc: 'Black American' },
-      { id: 'omar', name: 'Omar Campbell', color: '#00ddff', gender: 'M', dialog: '', role: 'CTO', skin: SKIN.brown, build: 'athletic', desc: 'Jamaican Black' },
-      { id: 'desmond', name: 'Desmond Blake', color: '#ff8844', gender: 'M', dialog: '', role: 'Engineer', skin: SKIN.deep, build: 'lean', desc: 'Jamaican Black' },
-      { id: 'carlos', name: 'Carlos Rivera', color: '#aa44ff', gender: 'M', dialog: '', role: 'Designer', skin: SKIN.tan, build: 'athletic', desc: 'Colombian' },
-      { id: 'miguel', name: 'Miguel Torres', color: '#88ff00', gender: 'M', dialog: '', role: 'Marketer', skin: SKIN.medium, build: 'lean', desc: 'Mexican' },
+      // 5 Black men — 2 Jamaican (ladies' men), 1 Black American, 1 African, 1 mixed
+      { id: 'omar', name: 'Omar Campbell', color: '#00ddff', gender: 'M', dialog: '', role: 'Player', skin: SKIN.deep, build: 'athletic', desc: 'Jamaican', ladies: true },
+      { id: 'desmond', name: 'Desmond Blake', color: '#ff8844', gender: 'M', dialog: '', role: 'CEO', skin: SKIN.brown, build: 'athletic', desc: 'Jamaican', ladies: true },
+      { id: 'marcus', name: 'Marcus Johnson', color: '#4488ff', gender: 'M', dialog: '', role: 'CTO', skin: SKIN.dark, build: 'broad', desc: 'Black American' },
+      { id: 'kwame', name: 'Kwame Asante', color: '#ffaa00', gender: 'M', dialog: '', role: 'Engineer', skin: SKIN.deep, build: 'athletic', desc: 'African (Ghana)' },
+      { id: 'deon', name: 'Deon Carter', color: '#aa44ff', gender: 'M', dialog: '', role: 'Investor', skin: SKIN.brown, build: 'broad', desc: 'Mixed Black' },
+      // 5 Mixed
+      { id: 'carlos', name: 'Carlos Rivera', color: '#88ff00', gender: 'M', dialog: '', role: 'Designer', skin: SKIN.tan, build: 'athletic', desc: 'Colombian' },
+      { id: 'miguel', name: 'Miguel Torres', color: '#44ffaa', gender: 'M', dialog: '', role: 'Marketer', skin: SKIN.medium, build: 'lean', desc: 'Mexican' },
       { id: 'jin', name: 'Jin Park', color: '#ff4488', gender: 'M', dialog: '', role: 'Freelancer', skin: SKIN.light, build: 'lean', desc: 'Korean' },
-      { id: 'rafael', name: 'Rafael Santos', color: '#44ffaa', gender: 'M', dialog: '', role: 'Lawyer', skin: SKIN.bronze, build: 'athletic', desc: 'Brazilian' },
+      { id: 'rafael', name: 'Rafael Santos', color: '#44aaff', gender: 'M', dialog: '', role: 'Lawyer', skin: SKIN.bronze, build: 'athletic', desc: 'Brazilian' },
       { id: 'kai', name: 'Kai Nakamura', color: '#ddff00', gender: 'M', dialog: '', role: 'Mentor', skin: SKIN.light, build: 'lean', desc: 'Japanese' },
-      { id: 'tony', name: 'Anthony Brooks', color: '#00ff88', gender: 'M', dialog: '', role: 'Rival CEO', skin: SKIN.medium, build: 'broad', desc: 'Mixed' },
       // 20 WOMEN — Mostly Hispanic/Caribbean, couple Black, couple white
       { id: 'sofia', name: 'Sofia Martinez', color: '#ff44aa', gender: 'F', dialog: '', role: 'Co-Founder', skin: SKIN.tan, build: 'fit', desc: 'Colombian' },
       { id: 'valentina', name: 'Valentina Cruz', color: '#ff2266', gender: 'F', dialog: '', role: 'VP Eng', skin: SKIN.bronze, build: 'athletic', desc: 'Colombian' },
@@ -360,25 +362,25 @@
 
     // === SIM ENGINE ===
     const dialogs = [
-      { t: 1, c: 'marcus', msg: "Welcome to AI Universe!" },
+      { t: 1, c: 'desmond', msg: "Big up AI Universe, mi bredda!" },
       { t: 3, c: 'sofia', msg: "This is incredible, papi!" },
-      { t: 5, c: 'valentina', msg: "30 characters in real-time..." },
+      { t: 5, c: 'omar', msg: "Respect, respect. Yow, who's new here?" },
       { t: 7, c: 'ana', msg: "Our numbers are looking great." },
-      { t: 9, c: 'omar', msg: "Deploying the new build now." },
+      { t: 9, c: 'marcus', msg: "30 characters running real-time." },
       { t: 11, c: 'isabella', msg: "Users will love this update." },
       { t: 13, c: 'rosa', msg: "Team morale is at an all-time high." },
-      { t: 15, c: 'camila', msg: "Press release is ready, mami!" },
-      { t: 17, c: 'nayeli', msg: "The UI is next level." },
-      { t: 19, c: 'shanice', msg: "Data shows 300% engagement!" },
-      { t: 22, c: 'desmond', msg: "Legal approved the launch." },
+      { t: 15, c: 'omar', msg: "Valentina, you look lovely today." },
+      { t: 17, c: 'desmond', msg: "Easy now... Naomi, mi need your number!" },
+      { t: 19, c: 'shanice', msg: "These Jamaican boys are bold!" },
+      { t: 22, c: 'kwame', msg: "Let me focus on the code." },
       { t: 25, c: 'luna', msg: "Marketing campaign is ready!" },
       { t: 28, c: 'mia', msg: "Closing three deals this week." },
-      { t: 31, c: 'keisha', msg: "Engineering is on track." },
+      { t: 31, c: 'deon', msg: "I'm increasing my investment." },
       { t: 34, c: 'yolanda', msg: "Press release is drafted." },
       { t: 37, c: 'carlos', msg: "The design is fire, hermano." },
       { t: 40, c: 'aliyah', msg: "You're doing something special here." },
       { t: 45, c: 'leticia', msg: "All tests passing. Ship it!" },
-      { t: 50, c: 'carmen', msg: "This is the future of AI." },
+      { t: 50, c: 'camila', msg: "This is the future of AI." },
     ];
 
     let simSecond = 0;
@@ -402,6 +404,20 @@
           walker.tz = (Math.random() - 0.5) * 14;
           walker.status = 'walking';
         }
+      }
+
+      // Jamaican players walk toward women
+      if (simSecond % 8 === 0) {
+        const players = characters.filter(c => c.ladies);
+        const women = characters.filter(c => c.gender === 'F');
+        players.forEach(p => {
+          if (p.status === 'idle') {
+            const target = women[Math.floor(Math.random() * women.length)];
+            p.tx = target.x + (Math.random() - 0.5) * 2;
+            p.tz = target.z + (Math.random() - 0.5) * 2;
+            p.status = 'walking';
+          }
+        });
       }
     }, 1000);
 
