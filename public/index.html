@@ -369,8 +369,8 @@
       { t: 9, c: 'marcus', msg: "30 characters running real-time." },
       { t: 11, c: 'isabella', msg: "Users will love this update." },
       { t: 13, c: 'rosa', msg: "Team morale is at an all-time high." },
-      { t: 15, c: 'omar', msg: "Valentina, you look lovely today." },
-      { t: 17, c: 'desmond', msg: "Easy now... Naomi, mi need your number!" },
+      { t: 15, c: 'valentina', msg: "Omar, you looking good today!" },
+      { t: 17, c: 'naomi', msg: "Desmond, mi need your number!" },
       { t: 19, c: 'shanice', msg: "These Jamaican boys are bold!" },
       { t: 22, c: 'kwame', msg: "Let me focus on the code." },
       { t: 25, c: 'luna', msg: "Marketing campaign is ready!" },
@@ -406,16 +406,16 @@
         }
       }
 
-      // Jamaican players walk toward women
-      if (simSecond % 8 === 0) {
+      // Jamaican players stand still, women walk toward them
+      if (simSecond % 10 === 0) {
         const players = characters.filter(c => c.ladies);
-        const women = characters.filter(c => c.gender === 'F');
+        const women = characters.filter(c => c.gender === 'F' && c.status === 'idle');
         players.forEach(p => {
-          if (p.status === 'idle') {
-            const target = women[Math.floor(Math.random() * women.length)];
-            p.tx = target.x + (Math.random() - 0.5) * 2;
-            p.tz = target.z + (Math.random() - 0.5) * 2;
-            p.status = 'walking';
+          const admirer = women[Math.floor(Math.random() * women.length)];
+          if (admirer) {
+            admirer.tx = p.x + (Math.random() - 0.5) * 2;
+            admirer.tz = p.z + (Math.random() - 0.5) * 2;
+            admirer.status = 'walking';
           }
         });
       }
