@@ -8,12 +8,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; overflow: hidden; font-family: monospace; }
     canvas { display: block; }
-    #overlay {
-      position: fixed; top: 10px; left: 10px;
-      color: #0f0; font-size: 12px; z-index: 100;
-      text-shadow: 0 0 8px rgba(0,255,136,0.5);
-      pointer-events: none;
-    }
     #hud {
       position: fixed; bottom: 10px; left: 10px; right: 10px;
       display: flex; gap: 6px; justify-content: center;
@@ -22,25 +16,12 @@
     .card {
       background: rgba(0,0,0,0.85); border: 1px solid #0f0;
       padding: 4px 8px; border-radius: 4px; color: #fff;
-      text-align: center; min-width: 80px; font-size: 10px;
+      text-align: center; min-width: 70px; font-size: 10px;
     }
     .card .name { font-weight: bold; font-size: 11px; }
-    .card .dialog { font-size: 9px; margin-top: 2px; color: #ccc; max-width: 140px; }
-    #loading {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: #0f0; font-size: 24px; z-index: 200;
-      text-shadow: 0 0 20px #0f0;
-      font-family: monospace;
-    }
   </style>
 </head>
 <body>
-  <div id="loading">🔥 Loading AI Universe...</div>
-  <div id="overlay" style="display:none">
-    <div>🔥 AI UNIVERSE</div>
-    <div id="fps">FPS: --</div>
-    <div id="chars">Characters: 30</div>
-  </div>
   <div id="hud"></div>
 
   <script type="importmap">
@@ -57,11 +38,10 @@
 
     // === SCENE ===
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050510);
-    scene.fog = new THREE.FogExp2(0x050510, 0.008);
+    scene.background = new THREE.Color(0x87CEEB); // Sky blue
 
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 6, 22);
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 5, 18);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -69,22 +49,19 @@
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.3;
+    renderer.toneMappingExposure = 1.0;
     document.body.prepend(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 5;
-    controls.maxDistance = 60;
-    controls.maxPolarAngle = Math.PI * 0.45;
+    controls.maxPolarAngle = Math.PI * 0.48;
     controls.target.set(0, 2, 0);
 
-    // === LIGHTING ===
-    scene.add(new THREE.AmbientLight(0x2a2a4a, 1.2));
-
-    const sun = new THREE.DirectionalLight(0xffeedd, 1.5);
-    sun.position.set(10, 20, 10);
+    // === LIGHTING — daylight ===
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xfff5e0, 1.8);
+    sun.position.set(15, 25, 10);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.left = -30;
@@ -93,177 +70,256 @@
     sun.shadow.camera.bottom = -20;
     scene.add(sun);
 
-    const greenSpot = new THREE.SpotLight(0x00ff88, 3, 40, Math.PI * 0.3, 0.5);
-    greenSpot.position.set(0, 15, 0);
-    scene.add(greenSpot);
+    // === OUTDOOR ENVIRONMENT ===
+    // Ground (grass)
+    const grassGeo = new THREE.PlaneGeometry(100, 100);
+    const grassMat = new THREE.MeshStandardMaterial({ color: 0x4a8c3f, roughness: 0.9 });
+    const grass = new THREE.Mesh(grassGeo, grassMat);
+    grass.rotation.x = -Math.PI / 2;
+    grass.receiveShadow = true;
+    scene.add(grass);
 
-    const blueLight = new THREE.PointLight(0x0066ff, 2, 30);
-    blueLight.position.set(-15, 8, 5);
-    scene.add(blueLight);
+    // Concrete patio/floor where characters stand
+    const concreteGeo = new THREE.PlaneGeometry(30, 16);
+    const concreteMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.7 });
+    const concrete = new THREE.Mesh(concreteGeo, concreteMat);
+    concrete.rotation.x = -Math.PI / 2;
+    concrete.position.y = 0.02;
+    concrete.receiveShadow = true;
+    scene.add(concrete);
 
-    const pinkLight = new THREE.PointLight(0xff0066, 2, 30);
-    pinkLight.position.set(15, 8, -5);
-    scene.add(pinkLight);
+    // === BUILDING — Back wall (office/lobby) ===
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e0d0, roughness: 0.8 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.4, roughness: 0.1, metalness: 0.3 });
 
-    // === ENVIRONMENT ===
-    const floorGeo = new THREE.PlaneGeometry(80, 60);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x0a0a15, roughness: 0.8, metalness: 0.2 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    scene.add(floor);
+    // Main back wall
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(30, 8, 0.3), wallMat);
+    backWall.position.set(0, 4, -8);
+    backWall.castShadow = true;
+    backWall.receiveShadow = true;
+    scene.add(backWall);
 
-    scene.add(new THREE.GridHelper(80, 40, 0x111133, 0x0a0a22));
+    // Side walls
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.3, 8, 16), wallMat);
+    leftWall.position.set(-15, 4, 0);
+    leftWall.castShadow = true;
+    scene.add(leftWall);
 
-    // Neon ring
-    const ringPoints = [];
-    for (let i = 0; i <= 64; i++) {
-      const a = (i / 64) * Math.PI * 2;
-      ringPoints.push(new THREE.Vector3(Math.cos(a) * 15, 0.02, Math.sin(a) * 8));
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.3, 8, 16), wallMat);
+    rightWall.position.set(15, 4, 0);
+    rightWall.castShadow = true;
+    scene.add(rightWall);
+
+    // Roof/ceiling overhang
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(32, 0.3, 18), darkMat);
+    roof.position.set(0, 8, 0);
+    roof.castShadow = true;
+    scene.add(roof);
+
+    // Large windows on back wall
+    for (let i = -2; i <= 2; i++) {
+      const win = new THREE.Mesh(new THREE.BoxGeometry(3, 4, 0.1), glassMat);
+      win.position.set(i * 5, 4, -7.7);
+      scene.add(win);
+      // Window frame
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(3.3, 4.3, 0.15), darkMat);
+      frame.position.set(i * 5, 4, -7.8);
+      scene.add(frame);
     }
-    const ringCurve = new THREE.CatmullRomCurve3(ringPoints, true);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-    const ring = new THREE.Mesh(new THREE.TubeGeometry(ringCurve, 128, 0.06, 8, true), ringMat);
-    scene.add(ring);
 
-    // Center platform
-    const platMat = new THREE.MeshStandardMaterial({ color: 0x1a2a1a, emissive: 0x003311, emissiveIntensity: 0.3, metalness: 0.7, roughness: 0.3 });
-    const platform = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 3, 0.2, 8), platMat);
-    platform.position.y = 0.1;
-    scene.add(platform);
+    // Front door
+    const door = new THREE.Mesh(new THREE.BoxGeometry(2.5, 4, 0.15), new THREE.MeshStandardMaterial({ color: 0x5c3a21 }));
+    door.position.set(0, 2, 8);
+    scene.add(door);
+    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.8, 4.3, 0.15), darkMat);
+    doorFrame.position.set(0, 2.15, 8);
+    scene.add(doorFrame);
+
+    // Reception desk
+    const deskMat = new THREE.MeshStandardMaterial({ color: 0x4a3728, roughness: 0.4 });
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 1.5), deskMat);
+    desk.position.set(0, 0.6, -5);
+    desk.castShadow = true;
+    scene.add(desk);
+    // Desk top
+    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.08, 1.7), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.2 }));
+    deskTop.position.set(0, 1.24, -5);
+    scene.add(deskTop);
+
+    // Potted plants
+    function addPlant(x, z) {
+      const pot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.25, 0.5, 8),
+        new THREE.MeshStandardMaterial({ color: 0x8B4513 })
+      );
+      pot.position.set(x, 0.25, z);
+      scene.add(pot);
+      const leaves = new THREE.Mesh(
+        new THREE.SphereGeometry(0.6, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0x2d5a27 })
+      );
+      leaves.position.set(x, 0.9, z);
+      scene.add(leaves);
+    }
+    addPlant(-12, -5);
+    addPlant(12, -5);
+    addPlant(-12, 5);
+    addPlant(12, 5);
+
+    // Sofas/seating
+    function addSofa(x, z, rot = 0) {
+      const sofaMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50 });
+      const base = new THREE.Mesh(new THREE.BoxGeometry(3, 0.5, 1.2), sofaMat);
+      base.position.set(x, 0.35, z);
+      base.rotation.y = rot;
+      base.castShadow = true;
+      scene.add(base);
+      const back = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 0.3), sofaMat);
+      back.position.set(x, 0.7, z - 0.45);
+      back.rotation.y = rot;
+      scene.add(back);
+    }
+    addSofa(-8, -3);
+    addSofa(8, -3);
+    addSofa(0, 2);
+
+    // Coffee table
+    const tableMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.3 });
+    function addTable(x, z) {
+      const top = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.8), tableMat);
+      top.position.set(x, 0.55, z);
+      top.castShadow = true;
+      scene.add(top);
+      // Legs
+      const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.55, 6);
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+      [[-0.6, -0.3], [0.6, -0.3], [-0.6, 0.3], [0.6, 0.3]].forEach(([dx, dz]) => {
+        const leg = new THREE.Mesh(legGeo, legMat);
+        leg.position.set(x + dx, 0.275, z + dz);
+        scene.add(leg);
+      });
+    }
+    addTable(-8, 0);
+    addTable(8, 0);
+
+    // Wall art (framed pictures)
+    function addArt(x, y, z, color) {
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(2, 1.5, 0.1), darkMat);
+      frame.position.set(x, y, z);
+      scene.add(frame);
+      const art = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.3, 0.05), new THREE.MeshStandardMaterial({ color }));
+      art.position.set(x, y, z + 0.08);
+      scene.add(art);
+    }
+    addArt(-10, 5, -7.6, 0x3498db);
+    addArt(-5, 5, -7.6, 0xe74c3c);
+    addArt(5, 5, -7.6, 0x2ecc71);
+    addArt(10, 5, -7.6, 0xf39c12);
+
+    // Floor rug
+    const rugGeo = new THREE.PlaneGeometry(8, 4);
+    const rugMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.95 });
+    const rug = new THREE.Mesh(rugGeo, rugMat);
+    rug.rotation.x = -Math.PI / 2;
+    rug.position.set(0, 0.03, 0);
+    scene.add(rug);
+
+    // Ceiling lights
+    for (let i = -2; i <= 2; i++) {
+      const light = new THREE.PointLight(0xfff5e0, 0.5, 15);
+      light.position.set(i * 5, 7.5, 0);
+      scene.add(light);
+      const fixture = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.4, 0.2, 8),
+        new THREE.MeshStandardMaterial({ color: 0xcccccc, emissive: 0xfff5e0, emissiveIntensity: 0.5 })
+      );
+      fixture.position.set(i * 5, 7.8, 0);
+      scene.add(fixture);
+    }
 
     // === CHARACTERS ===
     const charData = [
-      // 10 MEN
-      { id:'omar', name:'Omar Campbell', color:0x00ddff, gender:'M', role:'Player', desc:'Jamaican', ladies:true },
-      { id:'tony', name:'Tony Blake', color:0xff8844, gender:'M', role:'CEO', desc:'Jamaican', ladies:true },
-      { id:'marcus', name:'Marcus Johnson', color:0x4488ff, gender:'M', role:'CTO', desc:'Black American' },
-      { id:'kwame', name:'Kwame Asante', color:0xffaa00, gender:'M', role:'Engineer', desc:'African (Ghana)' },
-      { id:'deon', name:'Deon Carter', color:0xaa44ff, gender:'M', role:'Investor', desc:'Mixed Black' },
-      { id:'carlos', name:'Carlos Rivera', color:0x88ff00, gender:'M', role:'Designer', desc:'Colombian' },
-      { id:'miguel', name:'Miguel Torres', color:0x44ffaa, gender:'M', role:'Marketer', desc:'Mexican' },
-      { id:'jin', name:'Jin Park', color:0xff4488, gender:'M', role:'Freelancer', desc:'Korean' },
-      { id:'rafael', name:'Rafael Santos', color:0x44aaff, gender:'M', role:'Lawyer', desc:'Brazilian' },
-      { id:'kai', name:'Kai Nakamura', color:0xddff00, gender:'M', role:'Mentor', desc:'Japanese' },
-      // 20 WOMEN
-      { id:'sofia', name:'Sofia Martinez', color:0xff44aa, gender:'F', role:'Co-Founder', desc:'Colombian' },
-      { id:'valentina', name:'Valentina Cruz', color:0xff2266, gender:'F', role:'VP Eng', desc:'Colombian' },
-      { id:'isabella', name:'Isabella Rodriguez', color:0xaa44ff, gender:'F', role:'Product Lead', desc:'Colombian' },
-      { id:'mariana', name:'Mariana Lopez', color:0xff88cc, gender:'F', role:'Sales Lead', desc:'Colombian' },
-      { id:'camila', name:'Camila Gutierrez', color:0xff4466, gender:'F', role:'PR Manager', desc:'Colombian' },
-      { id:'ana', name:'Ana Patricia', color:0xff6644, gender:'F', role:'CFO', desc:'Colombian' },
-      { id:'rosa', name:'Rosa Hernandez', color:0x44aaff, gender:'F', role:'HR Director', desc:'Dominican' },
-      { id:'nayeli', name:'Nayeli Fernandez', color:0x44ddff, gender:'F', role:'Strategist', desc:'Puerto Rican' },
-      { id:'mia', name:'Mia Torres', color:0xffaa66, gender:'F', role:'Architect', desc:'Puerto Rican' },
-      { id:'yolanda', name:'Yolanda Vega', color:0xddff00, gender:'F', role:'Accountant', desc:'Dominican' },
-      { id:'carmen', name:'Carmen Ruiz', color:0xff44cc, gender:'F', role:'UX Researcher', desc:'Mexican' },
-      { id:'leticia', name:'Leticia Santos', color:0x66ff44, gender:'F', role:'Designer', desc:'Brazilian' },
-      { id:'luna', name:'Luna Sanchez', color:0x8844ff, gender:'F', role:'Marketer', desc:'Mexican' },
-      { id:'naomi', name:'Naomi Clarke', color:0x44ffcc, gender:'F', role:'Data Scientist', desc:'Jamaican' },
-      { id:'shanice', name:'Shanice Brown', color:0xff6688, gender:'F', role:'Content Creator', desc:'Jamaican' },
-      { id:'keisha', name:'Keisha Campbell', color:0xff8844, gender:'F', role:'Influencer', desc:'Jamaican' },
-      { id:'aliyah', name:'Aliyah Davis', color:0xff8866, gender:'F', role:'Analyst', desc:'Black American' },
-      { id:'jasmine', name:'Jasmine Okafor', color:0x66aaff, gender:'F', role:'Photographer', desc:'Nigerian' },
-      { id:'emma', name:'Emma Wilson', color:0xaa66ff, gender:'F', role:'Intern', desc:'American' },
-      { id:'hanna', name:'Hanna Brooks', color:0x44ff88, gender:'F', role:'QA Lead', desc:'American' },
+      { id:'omar', name:'Omar Campbell', color:0x00ddff, desc:'Jamaican', ladies:true },
+      { id:'tony', name:'Tony Blake', color:0xff8844, desc:'Jamaican', ladies:true },
+      { id:'marcus', name:'Marcus Johnson', color:0x4488ff, desc:'Black American' },
+      { id:'kwame', name:'Kwame Asante', color:0xffaa00, desc:'African' },
+      { id:'deon', name:'Deon Carter', color:0xaa44ff, desc:'Mixed Black' },
+      { id:'carlos', name:'Carlos Rivera', color:0x88ff00, desc:'Colombian' },
+      { id:'miguel', name:'Miguel Torres', color:0x44ffaa, desc:'Mexican' },
+      { id:'jin', name:'Jin Park', color:0xff4488, desc:'Korean' },
+      { id:'rafael', name:'Rafael Santos', color:0x44aaff, desc:'Brazilian' },
+      { id:'kai', name:'Kai Nakamura', color:0xddff00, desc:'Japanese' },
+      { id:'sofia', name:'Sofia Martinez', color:0xff44aa, desc:'Colombian' },
+      { id:'valentina', name:'Valentina Cruz', color:0xff2266, desc:'Colombian' },
+      { id:'isabella', name:'Isabella Rodriguez', color:0xaa44ff, desc:'Colombian' },
+      { id:'mariana', name:'Mariana Lopez', color:0xff88cc, desc:'Colombian' },
+      { id:'camila', name:'Camila Gutierrez', color:0xff4466, desc:'Colombian' },
+      { id:'ana', name:'Ana Patricia', color:0xff6644, desc:'Colombian' },
+      { id:'rosa', name:'Rosa Hernandez', color:0x44aaff, desc:'Dominican' },
+      { id:'nayeli', name:'Nayeli Fernandez', color:0x44ddff, desc:'Puerto Rican' },
+      { id:'mia', name:'Mia Torres', color:0xffaa66, desc:'Puerto Rican' },
+      { id:'yolanda', name:'Yolanda Vega', color:0xddff00, desc:'Dominican' },
+      { id:'carmen', name:'Carmen Ruiz', color:0xff44cc, desc:'Mexican' },
+      { id:'leticia', name:'Leticia Santos', color:0x66ff44, desc:'Brazilian' },
+      { id:'luna', name:'Luna Sanchez', color:0x8844ff, desc:'Mexican' },
+      { id:'naomi', name:'Naomi Clarke', color:0x44ffcc, desc:'Jamaican' },
+      { id:'shanice', name:'Shanice Brown', color:0xff6688, desc:'Jamaican' },
+      { id:'keisha', name:'Keisha Campbell', color:0xff8844, desc:'Jamaican' },
+      { id:'aliyah', name:'Aliyah Davis', color:0xff8866, desc:'Black American' },
+      { id:'jasmine', name:'Jasmine Okafor', color:0x66aaff, desc:'Nigerian' },
+      { id:'emma', name:'Emma Wilson', color:0xaa66ff, desc:'American' },
+      { id:'hanna', name:'Hanna Brooks', color:0x44ff88, desc:'American' },
     ];
 
-    // === CREATE CHARACTER BILLBOARDS ===
     const textureLoader = new THREE.TextureLoader();
     const characters = [];
 
     function createCharacter(data, index) {
       const group = new THREE.Group();
 
-      // Load portrait
+      // Load portrait texture
       const texture = textureLoader.load(`/portraits/${data.id}.png`);
       texture.colorSpace = THREE.SRGBColorSpace;
 
-      // Character card (portrait with frame)
-      const cardGeo = new THREE.PlaneGeometry(1.2, 1.8);
-      const cardMat = new THREE.MeshStandardMaterial({
+      // Character as flat panel (like a standee) — shows the full body photo
+      const panelGeo = new THREE.PlaneGeometry(1.0, 1.5);
+      const panelMat = new THREE.MeshStandardMaterial({
         map: texture,
+        side: THREE.DoubleSide,
+        roughness: 0.6,
         transparent: true,
-        roughness: 0.4,
-        metalness: 0.1,
-        side: THREE.DoubleSide
       });
-      const card = new THREE.Mesh(cardGeo, cardMat);
-      card.position.y = 1.3;
-      card.castShadow = true;
-      group.add(card);
+      const panel = new THREE.Mesh(panelGeo, panelMat);
+      panel.position.y = 0.9;
+      panel.castShadow = true;
+      group.add(panel);
 
-      // Glow border
-      const borderGeo = new THREE.PlaneGeometry(1.35, 1.95);
-      const hexColor = data.color;
-      const borderMat = new THREE.MeshBasicMaterial({
-        color: hexColor,
-        transparent: true,
-        opacity: 0.3,
-        side: THREE.DoubleSide
-      });
-      const border = new THREE.Mesh(borderGeo, borderMat);
-      border.position.y = 1.3;
-      border.position.z = -0.01;
-      group.add(border);
+      // Small shadow disc under character
+      const shadowGeo = new THREE.CircleGeometry(0.4, 16);
+      const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 });
+      const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+      shadow.rotation.x = -Math.PI / 2;
+      shadow.position.y = 0.03;
+      group.add(shadow);
 
-      // Stand (pedestal)
-      const standGeo = new THREE.BoxGeometry(0.8, 0.05, 0.4);
-      const standMat = new THREE.MeshStandardMaterial({
-        color: hexColor,
-        emissive: hexColor,
-        emissiveIntensity: 0.4,
-        metalness: 0.8,
-        roughness: 0.2
-      });
-      const stand = new THREE.Mesh(standGeo, standMat);
-      stand.position.y = 0.025;
-      group.add(stand);
-
-      // Name label (below portrait, on ground)
-      const labelCanvas = document.createElement('canvas');
-      labelCanvas.width = 512;
-      labelCanvas.height = 120;
-      const ctx = labelCanvas.getContext('2d');
-      ctx.fillStyle = 'rgba(0,0,0,0.8)';
-      ctx.beginPath();
-      ctx.roundRect(0, 0, 512, 120, 16);
-      ctx.fill();
-      const hex = '#' + hexColor.toString(16).padStart(6, '0');
-      ctx.fillStyle = hex;
-      ctx.font = 'bold 32px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(data.name, 256, 42);
-      ctx.fillStyle = 'rgba(255,255,255,0.6)';
-      ctx.font = '22px monospace';
-      ctx.fillText(`${data.desc} • ${data.role}`, 256, 80);
-      // Gender indicator
-      ctx.fillStyle = data.gender === 'F' ? '#ff69b4' : '#4488ff';
-      ctx.font = '18px monospace';
-      ctx.fillText(data.gender === 'F' ? '♀' : '♂', 256, 110);
-
-      const labelTex = new THREE.CanvasTexture(labelCanvas);
-      const labelMat = new THREE.SpriteMaterial({ map: labelTex, transparent: true });
-      const label = new THREE.Sprite(labelMat);
-      label.position.y = 0.15;
-      label.position.z = 0.3;
-      label.scale.set(2.0, 0.47, 1);
-      group.add(label);
-
-      // Position in grid
-      const row = Math.floor(index / 10);
-      const col = index % 10;
-      group.position.set((col - 4.5) * 3.5, 0, (row - 1) * 5);
+      // Position: spread around the lobby
+      const angle = (index / 30) * Math.PI * 2;
+      const radius = 3 + (index % 4) * 2;
+      group.position.set(
+        Math.cos(angle) * radius,
+        0,
+        Math.sin(angle) * radius * 0.6
+      );
 
       group.userData = {
         data,
-        baseY: 0,
+        panel,
         speaking: false,
         speakingTimer: 0,
         targetPos: null,
-        walkSpeed: 1.5 + Math.random(),
+        walkSpeed: 1.0 + Math.random() * 0.5,
         animT: Math.random() * 10,
-        card
       };
 
       scene.add(group);
@@ -271,172 +327,136 @@
     }
 
     // Load all characters
-    let loadedCount = 0;
-    const totalChars = charData.length;
-
-    charData.forEach((data, index) => {
-      const char = createCharacter(data, index);
-      characters.push(char);
-      loadedCount++;
-
-      if (loadedCount === totalChars) {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('overlay').style.display = 'block';
-        console.log(`🔥 AI Universe loaded — ${totalChars} characters`);
-      }
+    charData.forEach((data, i) => {
+      characters.push(createCharacter(data, i));
     });
 
     // === SIM ENGINE ===
     const dialogs = [
-      { t: 1, c: 'tony', msg: "Welcome to AI Universe, mi bredda!" },
-      { t: 3, c: 'sofia', msg: "This is incredible, papi!" },
-      { t: 5, c: 'omar', msg: "Yow, who's new here?" },
-      { t: 7, c: 'ana', msg: "Our numbers are looking great." },
-      { t: 9, c: 'marcus', msg: "30 characters running real-time." },
-      { t: 11, c: 'isabella', msg: "Users will love this update." },
-      { t: 13, c: 'rosa', msg: "Team morale is at an all-time high." },
-      { t: 15, c: 'valentina', msg: "Omar, you looking good today!" },
+      { t: 1, c: 'tony', msg: "Welcome to AI Universe!" },
+      { t: 3, c: 'sofia', msg: "This place is beautiful!" },
+      { t: 5, c: 'omar', msg: "Yow, nice lobby!" },
+      { t: 7, c: 'ana', msg: "Our office looks great." },
+      { t: 9, c: 'marcus', msg: "30 characters, real place." },
+      { t: 11, c: 'isabella', msg: "I love the decor." },
+      { t: 13, c: 'rosa', msg: "Team meeting in 5 minutes." },
+      { t: 15, c: 'valentina', msg: "Omar, you looking fine!" },
       { t: 17, c: 'naomi', msg: "Tony, mi need your number!" },
-      { t: 19, c: 'shanice', msg: "These Jamaican boys are bold!" },
-      { t: 22, c: 'kwame', msg: "Let me focus on the code." },
-      { t: 25, c: 'luna', msg: "Marketing campaign is ready!" },
-      { t: 28, c: 'mia', msg: "Closing three deals this week." },
-      { t: 31, c: 'deon', msg: "I'm increasing my investment." },
-      { t: 34, c: 'yolanda', msg: "Press release is drafted." },
-      { t: 37, c: 'carlos', msg: "The design is fire, hermano." },
-      { t: 40, c: 'aliyah', msg: "You're doing something special here." },
-      { t: 45, c: 'leticia', msg: "All tests passing. Ship it!" },
-      { t: 50, c: 'camila', msg: "This is the future of AI." },
+      { t: 19, c: 'shanice', msg: "This lobby is fire." },
+      { t: 22, c: 'kwame', msg: "Let me focus on work." },
+      { t: 25, c: 'luna', msg: "Marketing update ready!" },
+      { t: 28, c: 'mia', msg: "Closing deals today." },
+      { t: 31, c: 'deon', msg: "Investment approved." },
+      { t: 34, c: 'yolanda', msg: "Budget looks solid." },
+      { t: 37, c: 'carlos', msg: "Design is fire, hermano." },
+      { t: 40, c: 'aliyah', msg: "Something special here." },
+      { t: 45, c: 'leticia', msg: "Tests passing. Ship it!" },
+      { t: 50, c: 'camila', msg: "This is the future." },
     ];
 
     let simSecond = 0;
     setInterval(() => {
       simSecond++;
-      const events = dialogs.filter(d => d.t === simSecond);
-      events.forEach(e => {
+      dialogs.filter(d => d.t === simSecond).forEach(e => {
         const c = characters.find(g => g.userData.data.id === e.c);
         if (c) { c.userData.speaking = true; c.userData.speakingTimer = 4; }
       });
 
-      // Random walk
-      if (simSecond % 3 === 0) {
+      // Random walking
+      if (simSecond % 4 === 0) {
         const walker = characters[Math.floor(Math.random() * characters.length)];
         if (!walker.userData.targetPos) {
           walker.userData.targetPos = new THREE.Vector3(
-            (Math.random() - 0.5) * 24, 0, (Math.random() - 0.5) * 12
+            (Math.random() - 0.5) * 20,
+            0,
+            (Math.random() - 0.5) * 10
           );
         }
       }
 
-      // Jamaican players — women approach them
+      // Jamaican players — women walk toward them
       if (simSecond % 10 === 0) {
         const players = characters.filter(g => g.userData.data.ladies);
-        const women = characters.filter(g => g.userData.data.gender === 'F' && !g.userData.targetPos);
-        players.forEach(p => {
-          const admirer = women[Math.floor(Math.random() * women.length)];
-          if (admirer) {
-            admirer.userData.targetPos = new THREE.Vector3(
-              p.position.x + (Math.random() - 0.5) * 2, 0,
-              p.position.z + (Math.random() - 0.5) * 2
+        const women = characters.filter(g => !g.userData.data.ladies && !g.userData.targetPos);
+        if (women.length) {
+          players.forEach(p => {
+            const w = women[Math.floor(Math.random() * women.length)];
+            if (w) w.userData.targetPos = new THREE.Vector3(
+              p.position.x + (Math.random() - 0.5) * 1.5,
+              0,
+              p.position.z + (Math.random() - 0.5) * 1.5
             );
-          }
-        });
+          });
+        }
       }
     }, 1000);
 
     // === HUD ===
-    let hudVisible = characters.slice(0, 8);
+    let hudTimer = 0;
+    let hudChars = characters.slice(0, 6);
     setInterval(() => {
       const start = Math.floor(Math.random() * characters.length);
-      hudVisible = characters.slice(start, start + 8);
-      if (hudVisible.length < 8) hudVisible.push(...characters.slice(0, 8 - hudVisible.length));
+      hudChars = [];
+      for (let i = 0; i < 6; i++) hudChars.push(characters[(start + i) % characters.length]);
     }, 5000);
 
     function updateHUD() {
       const hud = document.getElementById('hud');
       const speakers = characters.filter(c => c.userData.speaking);
-      const show = speakers.length ? speakers : hudVisible;
+      const show = speakers.length ? speakers : hudChars;
       hud.innerHTML = show.map(c => {
-        const d = c.userData.data;
-        const hex = '#' + d.color.toString(16).padStart(6, '0');
+        const hex = '#' + c.userData.data.color.toString(16).padStart(6, '0');
         return `<div class="card" style="border-color:${hex}">
-          <div class="name" style="color:${hex}">${d.name}</div>
-          <div class="dialog">${d.desc} • ${d.role}</div>
+          <div class="name" style="color:${hex}">${c.userData.data.name}</div>
+          <div>${c.userData.data.desc}</div>
         </div>`;
       }).join('');
     }
 
-    // === ANIMATION LOOP ===
+    // === ANIMATION ===
     const clock = new THREE.Clock();
-    let frames = 0, fpsT = 0;
 
     function animate() {
       requestAnimationFrame(animate);
       const dt = clock.getDelta();
       const t = clock.elapsedTime;
-      frames++; fpsT += dt;
-      if (fpsT >= 1) {
-        document.getElementById('fps').textContent = `FPS: ${frames}`;
-        frames = 0; fpsT = 0;
-      }
 
-      // Animate characters
-      characters.forEach((group) => {
-        const ud = group.userData;
-
-        // Idle sway
-        const card = ud.card;
-        if (card) {
-          card.rotation.y = Math.sin(t * 0.5 + ud.animT) * 0.05;
-        }
+      characters.forEach(g => {
+        const ud = g.userData;
+        // Sway
+        ud.panel.rotation.y = Math.sin(t * 0.5 + ud.animT) * 0.08;
 
         // Walk
         if (ud.targetPos) {
-          const dx = ud.targetPos.x - group.position.x;
-          const dz = ud.targetPos.z - group.position.z;
+          const dx = ud.targetPos.x - g.position.x;
+          const dz = ud.targetPos.z - g.position.z;
           const dist = Math.sqrt(dx * dx + dz * dz);
           if (dist > 0.3) {
-            const spd = ud.walkSpeed * dt;
-            group.position.x += (dx / dist) * spd;
-            group.position.z += (dz / dist) * spd;
-            // Face camera while walking
-            group.lookAt(camera.position.x, group.position.y, camera.position.z);
-          } else {
-            ud.targetPos = null;
-          }
+            g.position.x += (dx / dist) * ud.walkSpeed * dt;
+            g.position.z += (dz / dist) * ud.walkSpeed * dt;
+            g.lookAt(camera.position.x, 0, camera.position.z);
+          } else ud.targetPos = null;
         }
 
-        // Always face camera (billboard)
-        if (!ud.targetPos) {
-          group.lookAt(camera.position.x, group.position.y, camera.position.z);
-        }
+        // Face camera
+        if (!ud.targetPos) g.lookAt(camera.position.x, 0, camera.position.z);
 
-        // Speaking pulse
+        // Speaking
         if (ud.speaking) {
           ud.speakingTimer -= dt;
-          if (card) {
-            const pulse = 1.0 + Math.sin(t * 10) * 0.05;
-            card.scale.set(pulse, pulse, 1);
-          }
-          if (ud.speakingTimer <= 0) {
-            ud.speaking = false;
-            if (card) card.scale.set(1, 1, 1);
-          }
+          ud.panel.scale.y = 1.0 + Math.sin(t * 12) * 0.03;
+          if (ud.speakingTimer <= 0) { ud.speaking = false; ud.panel.scale.y = 1.0; }
         }
 
         // Bounds
-        group.position.x = Math.max(-25, Math.min(25, group.position.x));
-        group.position.z = Math.max(-12, Math.min(12, group.position.z));
+        g.position.x = Math.max(-13, Math.min(13, g.position.x));
+        g.position.z = Math.max(-6, Math.min(6, g.position.z));
       });
-
-      // Neon ring color cycle
-      ringMat.color.setHSL((t * 0.05) % 1, 1, 0.5);
 
       controls.update();
       renderer.render(scene, camera);
       updateHUD();
     }
-
     animate();
 
     window.addEventListener('resize', () => {
@@ -445,15 +465,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // API
-    window.getSceneState = () => ({
-      characters: characters.map(c => ({
-        id: c.userData.data.id,
-        name: c.userData.data.name,
-        position: { x: c.position.x, y: c.position.y, z: c.position.z },
-        speaking: c.userData.speaking
-      }))
-    });
+    console.log('AI Universe — lobby scene loaded');
   </script>
 </body>
 </html>
