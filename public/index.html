@@ -48,7 +48,7 @@
     window.addEventListener('resize', resize);
 
     // === CAMERA ===
-    let camAngleY = 0, camAngleX = -0.25, camDist = 25;
+    let camAngleY = 0, camAngleX = -0.45, camDist = 28;
     let dragging = false, lastMX = 0, lastMY = 0;
     canvas.addEventListener('pointerdown', e => { dragging = true; lastMX = e.clientX; lastMY = e.clientY; });
     canvas.addEventListener('pointermove', e => {
@@ -123,14 +123,20 @@
       { id: 'hanna', name: 'Hanna Brooks', color: '#44ff88', gender: 'F', dialog: '', role: 'QA Lead', skin: SKIN.light, build: 'fit', desc: 'American' },
     ];
 
-    // Place characters in a scene layout
+    // Place characters in a spread-out layout — grid pattern
     const characters = charData.map((d, i) => {
-      const angle = (i / 30) * Math.PI * 2;
-      const radius = 4 + (i % 4) * 3;
+      const row = Math.floor(i / 10);
+      const col = i % 10;
+      // 3 rows of 10, spread wide
+      const x = (col - 4.5) * 4;
+      const z = (row - 1) * 5;
+      // Add some randomness for natural feel
+      const rx = (Math.random() - 0.5) * 1.0;
+      const rz = (Math.random() - 0.5) * 0.5;
       return {
         ...d,
-        x: Math.cos(angle) * radius,
-        z: Math.sin(angle) * radius,
+        x: x + rx,
+        z: z + rz,
         status: 'idle',
         animT: Math.random() * 10,
         tx: null, tz: null,
@@ -154,6 +160,10 @@
           c.x += (dx/d) * spd; c.z += (dz/d) * spd;
         } else { c.tx = null; c.tz = null; c.status = 'idle'; }
       }
+
+      // Keep in bounds
+      c.x = Math.max(-25, Math.min(25, c.x));
+      c.z = Math.max(-12, Math.min(12, c.z));
 
       const by = bobY;
       const headY = by + 1.8;
@@ -274,10 +284,24 @@
       // Name label
       const lbl = project(c.x, headY + 0.5, c.z);
       if (lbl && lbl.scale > 3) {
-        ctx.font = `bold ${Math.max(8, 10 * lbl.scale)}px monospace`;
+        const fontSize = Math.max(9, Math.min(16, 11 * lbl.scale));
+        ctx.font = `bold ${fontSize}px monospace`;
         ctx.fillStyle = c.color;
         ctx.textAlign = 'center';
+        // Shadow for readability
+        ctx.shadowColor = 'rgba(0,0,0,0.9)';
+        ctx.shadowBlur = 4;
         ctx.fillText(c.name, lbl.x, lbl.y);
+        ctx.shadowBlur = 0;
+        
+        // Role below name (smaller, muted)
+        const roleY = lbl.y + fontSize + 2;
+        ctx.font = `${fontSize * 0.7}px monospace`;
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.shadowColor = 'rgba(0,0,0,0.9)';
+        ctx.shadowBlur = 3;
+        ctx.fillText(c.desc, lbl.x, roleY);
+        ctx.shadowBlur = 0;
       }
     }
 
@@ -312,7 +336,7 @@
       ctx.beginPath();
       for (let i = 0; i <= segments; i++) {
         const a = (i / segments) * Math.PI * 2;
-        const p = project(Math.cos(a) * 8, 0, Math.sin(a) * 8);
+        const p = project(Math.cos(a) * 12, 0, Math.sin(a) * 6);
         if (!p) continue;
         if (i === 0) ctx.moveTo(p.x, p.y);
         else ctx.lineTo(p.x, p.y);
